@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { addNote, getAllNotes, deleteNote, updateNote } from '../lib/noteService';
 import React from 'react';
+import Link from 'next/link'; // ✅ Import Link
+
 export default function Home() {
   const [notes, setNotes] = useState([]);
   const [title, setTitle] = useState('');
@@ -42,13 +44,12 @@ export default function Home() {
 
   return (
     <div className="container mt-4">
-      <nav className="mb-4">
-        <a href="/" className="me-3 text-decoration-none">🏠 Home</a>
-        <a href="/new" className="me-3 text-decoration-none">➕ Tambah</a>
-        <a href="/archive" className="me-3 text-decoration-none">📦 Arsip</a>
-        <a href="/about" className="text-decoration-none">ℹ️ Tentang</a>
-        <a href="/list" className="me-3 text-decoration-none">📋 Daftar</a>
-
+      <nav className="mb-4 d-flex flex-wrap gap-2">
+        <Link href="/" className="me-3 text-decoration-none">🏠 Home</Link>
+        <Link href="/new" className="me-3 text-decoration-none">➕ Tambah</Link>
+        <Link href="/archive" className="me-3 text-decoration-none">📦 Arsip</Link>
+        <Link href="/about" className="text-decoration-none">ℹ️ Tentang</Link>
+        <Link href="/list" className="me-3 text-decoration-none">📋 Daftar</Link>
       </nav>
 
       <h1 className="mb-4">📒 Catatan Simpel</h1>
