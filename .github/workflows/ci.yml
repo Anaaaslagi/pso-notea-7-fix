@@ -34,9 +34,9 @@ jobs:
           SONAR_HOST_URL: https://sonarcloud.io
         with:
           args: >
-            -Dsonar.projectKey=Anaaaslagi_pso-c-notea
+            -Dsonar.projectKey=Anaaaslagi_pso-backups
             -Dsonar.organization=anaaaslagi
-            -Dsonar.sources=.
+            -Dsonar.sources=src
             -Dsonar.exclusions=**/node_modules/**,**/.next/**,**/public/**,**/__tests__/**
   test:
     runs-on: ubuntu-latest
