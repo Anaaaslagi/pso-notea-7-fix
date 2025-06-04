@@ -17,10 +17,12 @@ jobs:
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
 
+      - name: Set SERVICE_NAME environment variable
+        run: echo "SERVICE_NAME=${{ secrets.GCP_SERVICE }}" >> $GITHUB_ENV
+
       - name: Deploy to Cloud Run
         uses: google-github-actions/deploy-cloudrun@v2
         with:
-          service: ${{ secrets.GCP_SERVICE }}
+          service: ${{ env.SERVICE_NAME }}
           region: ${{ secrets.GCP_REGION }}
           image: ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/docker-repo/pso-next-app:latest
-          args: --service=${{ secrets.GCP_SERVICE }}
