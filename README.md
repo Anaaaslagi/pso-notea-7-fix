@@ -1,8 +1,6 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/pages/api-reference/create-next-app).
+## Notea
 
-## Getting Started
-
-First, run the development server:
+Notea adalah aplikasi web sederhana yang memungkinkan pengguna untuk membuat, melihat, mengedit, dan menghapus catatan. Proyek ini dibangun dengan fokus pada kemudahan penggunaan dan diintegrasikan dengan pipeline CI/CD untuk otomatisasi proses _build_, _test_, dan _deploy_.
 
 ```bash
 npm run dev
