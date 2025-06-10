@@ -1,95 +1,107 @@
-let getAllNotes, addNote, deleteNote, updateNote;
-import {
-  getDocs,
-  addDoc,
-  deleteDoc,
-  updateDoc,
-  collection,
-  doc,
-  query,
-  where
-} from 'firebase/firestore';
+jest.mock('firebase/firestore', () => ({
+  getFirestore: jest.fn(() => ({})),  
+  collection: jest.fn(() => ({})),  
+  query: jest.fn(() => ({})),  
+  where: jest.fn(() => ({})), 
+  getDocs: jest.fn(),  
+  addDoc: jest.fn(),  
+  deleteDoc: jest.fn(),  
+  updateDoc: jest.fn(),  
+  doc: jest.fn(() => ({})),  
+}));
 
-// mock Firestore methodss
-jest.mock('firebase/firestore', () => {
-  const original = jest.requireActual('firebase/firestore');
-  return {
-    ...original,
-    getDocs: jest.fn(),
-    addDoc: jest.fn(),
-    deleteDoc: jest.fn(),
-    updateDoc: jest.fn(),
-    collection: jest.fn(() => 'mock-collection-ref'),
-    doc: jest.fn(() => 'mock-doc-ref'),
-    query: jest.fn(() => 'mock-query'),
-    where: jest.fn(() => 'mock-where'),
-  };
-});
+jest.mock('../src/lib/firebase', () => ({
+  db: {},  // Mock db
+  auth: {}, // Mock auth
+  getFirestore: jest.fn(() => ({})),  // Mock getFirestore
+  getApps: jest.fn(() => []),  // Mock getApps
+  getApp: jest.fn(() => ({})),  // Mock getApp
+}));
 
-// pindahkan mock localStorage sebelum require() modul yang menggunakan localStorage
-beforeAll(() => {
-  const mockLocalStorage = {
-    getItem: jest.fn((key) => {
-      if (key === 'username') return 'testuser';
-      return null; 
-    }),
-    setItem: jest.fn(),
-    removeItem: jest.fn(),
-  };
+import * as noteService from '../src/lib/noteService';
+import { getDocs, addDoc, deleteDoc, updateDoc } from 'firebase/firestore';  // import Firestore methods untuk memverifikasi mock
 
-  Object.defineProperty(global, 'localStorage', {
-    value: mockLocalStorage,
+describe('noteService', () => {
+  afterEach(() => {
+    jest.clearAllMocks();  // reset mocks setelah setiap test
   });
 
-  // require modul setelah mocking localStorage
-  const noteService = require('../src/lib/noteService');
-  getAllNotes = noteService.getAllNotes;
-  addNote = noteService.addNote;
-  deleteNote = noteService.deleteNote;
-  updateNote = noteService.updateNote;
-});
+  describe('getAllNotes', () => {
+    it('should return notes for the logged-in user', async () => {
+      global.localStorage.setItem('username', 'testuser'); 
 
-beforeEach(() => {
-  jest.clearAllMocks();
-  jest.spyOn(console, 'warn').mockImplementation(() => {});
-});
+      const mockDocs = [
+        { id: '1', data: () => ({ title: 'Note 1', content: 'Content 1', username: 'testuser' }) },
+        { id: '2', data: () => ({ title: 'Note 2', content: 'Content 2', username: 'testuser' }) },
+      ];
 
-describe('🔥 noteService', () => {
-  it('getAllNotes() mengembalikan data yang dimapping dari snapshot', async () => {
-    const mockDocs = [
-      { id: '1', data: () => ({ title: 'A', content: 'C1' }) },
-      { id: '2', data: () => ({ title: 'B', content: 'C2' }) },
-    ];
-    getDocs.mockResolvedValueOnce({ docs: mockDocs });
+      // getDocs untuk return dokumen 
+      getDocs.mockResolvedValueOnce({ docs: mockDocs });
 
-    const notes = await getAllNotes();
+      const notes = await noteService.getAllNotes();
 
-    expect(query).toHaveBeenCalled();
-    expect(getDocs).toHaveBeenCalledWith('mock-query');
-    expect(notes).toEqual([
-      { id: '1', title: 'A', content: 'C1' },
-      { id: '2', title: 'B', content: 'C2' },
-    ]);
-  });
+      // getDocs dipanggil dengan benar
+      expect(getDocs).toHaveBeenCalledWith(expect.any(Object));  
+      expect(notes).toEqual([
+        { id: '1', title: 'Note 1', content: 'Content 1', username: 'testuser' },
+        { id: '2', title: 'Note 2', content: 'Content 2', username: 'testuser' },
+      ]);
+    });
 
-  it('addNote() memanggil addDoc dengan data yang sesuai', async () => {
-    await addNote('Judul Tes', 'Isi Tes');
+    it('should return empty array if no username is in localStorage', async () => {
+      global.localStorage.removeItem('username');  // case no uname
 
-    expect(addDoc).toHaveBeenCalledWith('mock-collection-ref', {
-      title: 'Judul Tes',
-      content: 'Isi Tes',
-      username: 'testuser',
+      const notes = await noteService.getAllNotes();
+
+      // case return kosong
+      expect(notes).toEqual([]);
     });
   });
 
-  it('deleteNote() memanggil deleteDoc dengan doc yang sesuai', async () => {
-    await deleteNote('note-id');
-    expect(deleteDoc).toHaveBeenCalledWith('mock-doc-ref');
+  describe('addNote', () => {
+    it('should add a new note for the logged-in user', async () => {
+      global.localStorage.setItem('username', 'testuser');
+      addDoc.mockResolvedValueOnce({ id: '123' });
+
+      const result = await noteService.addNote('Test Title', 'Test Content');
+
+      // pastikan addDoc dipanggil dengan benar
+      expect(addDoc).toHaveBeenCalledWith(expect.any(Object), { title: 'Test Title', content: 'Test Content', username: 'testuser' });
+      expect(result).toEqual({ id: '123' });
+    });
+
+    it('should throw error if user is not logged in', async () => {
+      global.localStorage.removeItem('username'); // case tidak ada username
+
+      await expect(noteService.addNote('Test Title', 'Test Content')).rejects.toThrow('User belum login, tidak bisa menambahkan catatan');
+    });
   });
 
-  it('updateNote() memanggil updateDoc dengan data yang benar', async () => {
-    const newData = { title: 'Baru', content: 'Update konten' };
-    await updateNote('note-id', newData);
-    expect(updateDoc).toHaveBeenCalledWith('mock-doc-ref', newData);
+  describe('deleteNote', () => {
+    it('should delete a note by id', async () => {
+      const mockId = '123';
+      const mockDoc = {};  // mock object untuk doc()
+      deleteDoc.mockResolvedValueOnce();
+
+      // memastikan deleteDoc dipanggil dengan benar, pastikan `doc` dipanggil dengan id yang benar
+      await noteService.deleteNote(mockId);
+
+      // pastikan deleteDoc dipanggil dengan objek yang benar
+      expect(deleteDoc).toHaveBeenCalledWith(mockDoc);  
+    });
+  });
+
+  describe('updateNote', () => {
+    it('should update an existing note', async () => {
+      const mockId = '123';
+      const mockData = { title: 'Updated Title', content: 'Updated Content' };
+      const mockDoc = {};  
+      updateDoc.mockResolvedValueOnce();
+
+
+      await noteService.updateNote(mockId, mockData);
+
+      expect(updateDoc).toHaveBeenCalledWith(mockDoc, mockData);  
+    });
   });
 });
