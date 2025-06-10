@@ -20,6 +20,6 @@ jobs:
       - name: Deploy to Cloud Run
         uses: google-github-actions/deploy-cloudrun@v2
         with:
-          service: notea-app # ganti sesuai nama service Cloud Run kamu
+          service: ${{ secrets.GCP_SERVICE }} # ganti sesuai nama service Cloud Run kamu
           region: ${{ secrets.GCP_REGION }}
           image: ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/docker-repo/notea:latest
