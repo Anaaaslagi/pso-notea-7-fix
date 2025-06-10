@@ -16,11 +16,10 @@ import {
   where
 } from 'firebase/firestore';
 
-// 🔧 Mock Firestore functions
 jest.mock('firebase/firestore', () => {
-  const originalModule = jest.requireActual('firebase/firestore');
+  const original = jest.requireActual('firebase/firestore');
   return {
-    ...originalModule,
+    ...original,
     getDocs: jest.fn(),
     addDoc: jest.fn(),
     deleteDoc: jest.fn(),
@@ -32,15 +31,15 @@ jest.mock('firebase/firestore', () => {
   };
 });
 
-// 🔧 Mock localStorage
 beforeEach(() => {
+  // ✅ Fix untuk addNote dan getAllNotes
   global.localStorage = {
     getItem: jest.fn(() => 'testuser'),
     setItem: jest.fn(),
     removeItem: jest.fn(),
   };
 
-  jest.spyOn(console, 'warn').mockImplementation(() => {}); // Supress warning in test
+  jest.clearAllMocks(); // reset semua mock antar test
 });
 
 describe('🔥 noteService', () => {
@@ -53,6 +52,7 @@ describe('🔥 noteService', () => {
 
     const notes = await getAllNotes();
 
+    // Bisa juga: expect(getDocs).toHaveBeenCalled();
     expect(getDocs).toHaveBeenCalledWith('mock-query');
     expect(notes).toEqual([
       { id: '1', title: 'A', content: 'C1' },
