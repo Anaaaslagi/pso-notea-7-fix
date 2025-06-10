@@ -12,6 +12,34 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Verify Triggering CI Workflow Conclusion
+        # Memeriksa status sebenarnya dari CI Workflow yang memicu melalui GitHub API
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          WORKFLOW_RUN_ID: ${{ github.event.workflow_run.id }}
+          WORKFLOW_RUN_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+        run: |
+          echo "Verifying CI Workflow Run ID: $WORKFLOW_RUN_ID"
+          echo "Initial Conclusion from Event: $WORKFLOW_RUN_CONCLUSION"
+
+          # Panggil GitHub API untuk mendapatkan detail run workflow
+          CI_RUN_DETAILS=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
+            "${{ github.api_url }}/repos/${{ github.repository }}/actions/runs/$WORKFLOW_RUN_ID")
+
+          # Ekstrak conclusion dari respons API
+          ACTUAL_CONCLUSION=$(echo "$CI_RUN_DETAILS" | jq -r '.conclusion')
+          ACTUAL_STATUS=$(echo "$CI_RUN_DETAILS" | jq -r '.status')
+
+          echo "Actual CI Workflow Run Conclusion: $ACTUAL_CONCLUSION"
+          echo "Actual CI Workflow Run Status: $ACTUAL_STATUS"
+
+          # Pastikan konklusi adalah 'success'
+          if [ "$ACTUAL_CONCLUSION" != "success" ]; then
+            echo "::error::CI Pipeline conclusion was '$ACTUAL_CONCLUSION', not 'success'. Aborting CD deployment."
+            exit 1
+          fi
+          echo "CI Pipeline successfully completed. Proceeding with deployment."
+
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
@@ -22,4 +50,5 @@ jobs:
         with:
           service: ${{ secrets.GCP_SERVICE }}
           region: ${{ secrets.GCP_REGION }}
-          image: ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/docker-repo/notea:latest
+          # Deploy image dengan tag SHA dari CI yang memicu
+          image: ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/docker-repo/notea:${{ github.event.workflow_run.head_sha }}
