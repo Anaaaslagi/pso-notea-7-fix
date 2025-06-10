@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/router';
 import { loginUser } from '../lib/authService';
+import Link from 'next/link';
 
 export default function LoginPage() {
   const [username, setUsername] = useState('');
@@ -43,7 +44,7 @@ export default function LoginPage() {
         <button type="submit" className="btn btn-primary w-100">Login</button>
 
         <p className="mt-3 text-center">
-          Belum punya akun? <a href="/register">Daftar</a>
+            Belum punya akun? <Link href="/register">Daftar</Link>
         </p>
       </form>
     </div>
