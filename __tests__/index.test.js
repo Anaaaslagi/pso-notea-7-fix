@@ -1,8 +1,8 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import Home from '../pages/index';
-import * as noteService from '../lib/noteService';
+import Home from '../src/pages/index';
+import * as noteService from '../src/lib/noteService';
 
-jest.mock('../lib/noteService');
+jest.mock('../src/lib/noteService');
 
 describe('📒 Halaman Home - Catatan Simpel', () => {
   const dummyNotes = [

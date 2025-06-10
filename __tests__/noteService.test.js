@@ -3,10 +3,17 @@ import {
   addNote,
   deleteNote,
   updateNote
-} from '../src/lib/noteService';
+} from '@/lib/noteService';
 
-import { collection, addDoc, getDocs, deleteDoc, updateDoc, doc } from 'firebase/firestore';
-import { db } from '../lib/firebase';
+import {
+  collection,
+  addDoc,
+  getDocs,
+  deleteDoc,
+  updateDoc,
+  doc
+} from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 jest.mock('firebase/firestore', () => ({
   collection: jest.fn(),
@@ -17,13 +24,14 @@ jest.mock('firebase/firestore', () => ({
   doc: jest.fn()
 }));
 
-jest.mock('../lib/firebase', () => ({
-  db: {} 
+jest.mock('@/lib/firebase', () => ({
+  db: {}
 }));
 
 describe('🔥 noteService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    collection.mockReturnValue('mock-collection-ref');
   });
 
   it('getAllNotes() mengembalikan data yang dimapping dari snapshot', async () => {
@@ -36,7 +44,7 @@ describe('🔥 noteService', () => {
 
     const notes = await getAllNotes();
 
-    expect(getDocs).toHaveBeenCalledWith(expect.any(Object));
+    expect(getDocs).toHaveBeenCalledWith('mock-collection-ref');
     expect(notes).toEqual([
       { id: '1', title: 'A', content: 'C1' },
       { id: '2', title: 'B', content: 'C2' }
@@ -48,7 +56,7 @@ describe('🔥 noteService', () => {
 
     const result = await addNote('Test Title', 'Test Content');
 
-    expect(addDoc).toHaveBeenCalledWith(expect.any(Object), {
+    expect(addDoc).toHaveBeenCalledWith('mock-collection-ref', {
       title: 'Test Title',
       content: 'Test Content'
     });
