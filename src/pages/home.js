@@ -3,6 +3,7 @@ import { getAllFolders, addFolder, updateFolder, deleteFolder } from '../lib/fol
 import { getAllNotes, getNotesByFolder, deleteNote } from '../lib/noteService';
 import Link from "next/link";
 import Swal from "sweetalert2";
+import { useRouter } from 'next/router';
 
 export default function Home() {
   const [username, setUsername] = useState(null);
@@ -223,7 +224,7 @@ export default function Home() {
               <div className="card h-100" style={{ cursor: "pointer" }}>
                 <div
                   className="card-body"
-                  onClick={() => window.location.href = `/note/${note.id}`}
+                  onClick={() => window.location.href = `/note-detail/${note.id}`}
                 >
                   <h5 className="card-title">{note.title}</h5>
                   <p className="card-text">{note.content}</p>
