@@ -1,8 +1,10 @@
+// lib/firebase.js
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
+import { getAuth } from 'firebase/auth';
 
 const firebaseConfig = {
-  apiKey: "AIza...", 
+  apiKey: "AIzaSyBgYSH5BXM45Wj9_lgII2X5LUWmNoo4VVk", 
   authDomain: "pso-final-project.firebaseapp.com",
   projectId: "pso-final-project",
   storageBucket: "pso-final-project.appspot.com",
@@ -10,6 +12,9 @@ const firebaseConfig = {
   appId: "1:953582821365:web:abc123"
 };
 
+// Inisialisasi app hanya sekali
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
+// Ekspor Firestore dan Auth
 export const db = getFirestore(app);
+export const auth = getAuth(app);
