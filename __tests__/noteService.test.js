@@ -3,7 +3,7 @@ import {
   addNote,
   deleteNote,
   updateNote
-} from '../lib/noteService';
+} from '../src/lib/noteService';
 
 import { collection, addDoc, getDocs, deleteDoc, updateDoc, doc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
