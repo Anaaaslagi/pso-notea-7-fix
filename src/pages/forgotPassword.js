@@ -1,7 +1,8 @@
 // pages/forgot-password.js
 import React, { useState } from 'react';
 import { useRouter } from 'next/router';
-import { resetPassword } from '../lib/authService'; // Import fungsi resetPassword
+import { resetPassword } from '../lib/authService';
+import Link from 'next/link';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
@@ -27,7 +28,7 @@ export default function ForgotPasswordPage() {
     try {
       await resetPassword(email, newPassword);
       alert('Password berhasil direset! Silakan login dengan password baru Anda.');
-      router.push('/'); // Redirect ke halaman login setelah berhasil
+      router.push('/');
     } catch (err) {
       console.error('❌ Reset password gagal:', err.message);
       alert('Reset password gagal: ' + err.message);
@@ -41,7 +42,7 @@ export default function ForgotPasswordPage() {
         <div className="mb-3">
           <label htmlFor="emailInput" className="form-label">Email</label>
           <input
-            type="email" // Menggunakan type="email" untuk validasi browser dasar
+            type="email"
             className="form-control"
             id="emailInput"
             placeholder="Masukkan email Anda"
@@ -76,7 +77,7 @@ export default function ForgotPasswordPage() {
         </div>
         <button type="submit" className="btn btn-primary w-100">Reset Password</button>
         <p className="mt-3 text-center">
-          <a href="/">Kembali ke Login</a>
+          <Link href="/">Kembali ke Login</Link>
         </p>
       </form>
     </div>
