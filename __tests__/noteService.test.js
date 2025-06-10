@@ -10,7 +10,7 @@ import {
   where
 } from 'firebase/firestore';
 
-// Mock Firestore methods
+// Mock Firestore methodss
 jest.mock('firebase/firestore', () => {
   const original = jest.requireActual('firebase/firestore');
   return {
