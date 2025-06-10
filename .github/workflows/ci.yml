@@ -70,13 +70,13 @@ jobs:
       - name: Configure Docker for Artifact Registry
         run: gcloud auth configure-docker ${{ secrets.GCP_REGION }}-docker.pkg.dev --quiet
 
-      - name: Build Docker image
+      - name: Build and Push Docker image with Commit SHA Tag
         run: |
-          IMAGE="${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/docker-repo/notea:latest"
-          docker build -t $IMAGE .
-          echo "IMAGE=$IMAGE" >> $GITHUB_ENV
-
-      - name: Push Docker image to Artifact Registry
-        run: docker push $IMAGE
-        env:
-          IMAGE: ${{ env.IMAGE }}
+          IMAGE_TAG="${{ github.sha }}" # Menggunakan SHA commit sebagai tag
+          FULL_IMAGE_NAME="${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/docker-repo/notea:$IMAGE_TAG"
+          
+          echo "Building image: $FULL_IMAGE_NAME"
+          docker build -t $FULL_IMAGE_NAME .
+          
+          echo "Pushing image: $FULL_IMAGE_NAME"
+          docker push $FULL_IMAGE_NAME
