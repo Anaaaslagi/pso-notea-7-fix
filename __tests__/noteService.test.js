@@ -1,10 +1,4 @@
-import {
-  getAllNotes,
-  addNote,
-  deleteNote,
-  updateNote
-} from '../src/lib/noteService';
-
+let getAllNotes, addNote, deleteNote, updateNote;
 import {
   getDocs,
   addDoc,
@@ -16,6 +10,7 @@ import {
   where
 } from 'firebase/firestore';
 
+// Mock Firestore methods
 jest.mock('firebase/firestore', () => {
   const original = jest.requireActual('firebase/firestore');
   return {
@@ -27,19 +22,36 @@ jest.mock('firebase/firestore', () => {
     collection: jest.fn(() => 'mock-collection-ref'),
     doc: jest.fn(() => 'mock-doc-ref'),
     query: jest.fn(() => 'mock-query'),
-    where: jest.fn(),
+    where: jest.fn(() => 'mock-where'),
   };
 });
 
-beforeEach(() => {
-  // ✅ Fix untuk addNote dan getAllNotes
-  global.localStorage = {
-    getItem: jest.fn(() => 'testuser'),
+// Pindahkan mock localStorage sebelum require() modul yang menggunakan localStorage
+beforeAll(() => {
+  const mockLocalStorage = {
+    getItem: jest.fn((key) => {
+      if (key === 'username') return 'testuser';
+      return null; // semua selain itu biarkan kosong agar Firebase Auth tidak error
+    }),
     setItem: jest.fn(),
     removeItem: jest.fn(),
   };
 
-  jest.clearAllMocks(); // reset semua mock antar test
+  Object.defineProperty(global, 'localStorage', {
+    value: mockLocalStorage,
+  });
+
+  // Baru require modul setelah mocking localStorage
+  const noteService = require('../src/lib/noteService');
+  getAllNotes = noteService.getAllNotes;
+  addNote = noteService.addNote;
+  deleteNote = noteService.deleteNote;
+  updateNote = noteService.updateNote;
+});
+
+beforeEach(() => {
+  jest.clearAllMocks();
+  jest.spyOn(console, 'warn').mockImplementation(() => {});
 });
 
 describe('🔥 noteService', () => {
@@ -52,7 +64,7 @@ describe('🔥 noteService', () => {
 
     const notes = await getAllNotes();
 
-    // Bisa juga: expect(getDocs).toHaveBeenCalled();
+    expect(query).toHaveBeenCalled();
     expect(getDocs).toHaveBeenCalledWith('mock-query');
     expect(notes).toEqual([
       { id: '1', title: 'A', content: 'C1' },
