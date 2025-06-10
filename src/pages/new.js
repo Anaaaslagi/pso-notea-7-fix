@@ -11,7 +11,7 @@ export default function NewNotePage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     await addNote(title, content);
-    router.push('/');
+    router.push('/home');
   };
 
   return (

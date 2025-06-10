@@ -19,14 +19,14 @@ export const getAllNotes = async () => {
 };
 
 // Tambahkan catatan baru untuk user yang sedang login
-export const addNote = async (title, content) => {
+export const addNote = async (title, content, folderId = null) => {
   const username = localStorage.getItem('username');
 
   if (!username) {
     throw new Error("User belum login, tidak bisa menambahkan catatan");
   }
 
-  return await addDoc(notesRef, { title, content, username });
+  return await addDoc(notesRef, { title, content, username, folderId });
 };
 
 // Hapus catatan berdasarkan ID
@@ -38,3 +38,17 @@ export const deleteNote = async (id) => {
 export const updateNote = async (id, newData) => {
   return await updateDoc(doc(db, "notes", id), newData);
 };
+
+export const getNotesByFolder = async (folderId) => {
+  const username = localStorage.getItem('username');
+  if (!username) return [];
+  let q;
+  if (folderId) {
+    q = query(notesRef, where("username", "==", username), where("folderId", "==", folderId));
+  } else {
+    q = query(notesRef, where("username", "==", username), where("folderId", "==", null));
+  }
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+};
+
