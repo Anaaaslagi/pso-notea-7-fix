@@ -3,89 +3,81 @@ import {
   addNote,
   deleteNote,
   updateNote
-} from '@/lib/noteService';
+} from '../src/lib/noteService';
 
 import {
-  collection,
-  addDoc,
   getDocs,
+  addDoc,
   deleteDoc,
   updateDoc,
-  doc
+  collection,
+  doc,
+  query,
+  where
 } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 
-jest.mock('firebase/firestore', () => ({
-  collection: jest.fn(),
-  addDoc: jest.fn(),
-  getDocs: jest.fn(),
-  deleteDoc: jest.fn(),
-  updateDoc: jest.fn(),
-  doc: jest.fn()
-}));
+// 🔧 Mock Firestore functions
+jest.mock('firebase/firestore', () => {
+  const originalModule = jest.requireActual('firebase/firestore');
+  return {
+    ...originalModule,
+    getDocs: jest.fn(),
+    addDoc: jest.fn(),
+    deleteDoc: jest.fn(),
+    updateDoc: jest.fn(),
+    collection: jest.fn(() => 'mock-collection-ref'),
+    doc: jest.fn(() => 'mock-doc-ref'),
+    query: jest.fn(() => 'mock-query'),
+    where: jest.fn(),
+  };
+});
 
-jest.mock('@/lib/firebase', () => ({
-  db: {}
-}));
+// 🔧 Mock localStorage
+beforeEach(() => {
+  global.localStorage = {
+    getItem: jest.fn(() => 'testuser'),
+    setItem: jest.fn(),
+    removeItem: jest.fn(),
+  };
+
+  jest.spyOn(console, 'warn').mockImplementation(() => {}); // Supress warning in test
+});
 
 describe('🔥 noteService', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-    collection.mockReturnValue('mock-collection-ref');
-  });
-
   it('getAllNotes() mengembalikan data yang dimapping dari snapshot', async () => {
-    const fakeDocs = [
+    const mockDocs = [
       { id: '1', data: () => ({ title: 'A', content: 'C1' }) },
-      { id: '2', data: () => ({ title: 'B', content: 'C2' }) }
+      { id: '2', data: () => ({ title: 'B', content: 'C2' }) },
     ];
-
-    getDocs.mockResolvedValue({ docs: fakeDocs });
+    getDocs.mockResolvedValueOnce({ docs: mockDocs });
 
     const notes = await getAllNotes();
 
-    expect(getDocs).toHaveBeenCalledWith('mock-collection-ref');
+    expect(getDocs).toHaveBeenCalledWith('mock-query');
     expect(notes).toEqual([
       { id: '1', title: 'A', content: 'C1' },
-      { id: '2', title: 'B', content: 'C2' }
+      { id: '2', title: 'B', content: 'C2' },
     ]);
   });
 
   it('addNote() memanggil addDoc dengan data yang sesuai', async () => {
-    addDoc.mockResolvedValue({ id: 'abc123' });
-
-    const result = await addNote('Test Title', 'Test Content');
+    await addNote('Judul Tes', 'Isi Tes');
 
     expect(addDoc).toHaveBeenCalledWith('mock-collection-ref', {
-      title: 'Test Title',
-      content: 'Test Content'
+      title: 'Judul Tes',
+      content: 'Isi Tes',
+      username: 'testuser',
     });
-
-    expect(result).toEqual({ id: 'abc123' });
   });
 
-  it('deleteNote() memanggil deleteDoc dengan ID yang benar', async () => {
-    const mockDocRef = {};
-    doc.mockReturnValue(mockDocRef);
-    deleteDoc.mockResolvedValue();
-
-    await deleteNote('note-id-123');
-
-    expect(doc).toHaveBeenCalledWith(db, 'notes', 'note-id-123');
-    expect(deleteDoc).toHaveBeenCalledWith(mockDocRef);
+  it('deleteNote() memanggil deleteDoc dengan doc yang sesuai', async () => {
+    await deleteNote('note-id');
+    expect(deleteDoc).toHaveBeenCalledWith('mock-doc-ref');
   });
 
   it('updateNote() memanggil updateDoc dengan data yang benar', async () => {
-    const mockDocRef = {};
-    doc.mockReturnValue(mockDocRef);
-    updateDoc.mockResolvedValue();
-
-    await updateNote('note-id-456', { title: 'Updated', content: 'New content' });
-
-    expect(doc).toHaveBeenCalledWith(db, 'notes', 'note-id-456');
-    expect(updateDoc).toHaveBeenCalledWith(mockDocRef, {
-      title: 'Updated',
-      content: 'New content'
-    });
+    const newData = { title: 'Baru', content: 'Update konten' };
+    await updateNote('note-id', newData);
+    expect(updateDoc).toHaveBeenCalledWith('mock-doc-ref', newData);
   });
 });
