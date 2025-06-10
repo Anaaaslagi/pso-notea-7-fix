@@ -10,7 +10,7 @@ import {
   where
 } from 'firebase/firestore';
 
-// Mock Firestore methodss
+// mock Firestore methodss
 jest.mock('firebase/firestore', () => {
   const original = jest.requireActual('firebase/firestore');
   return {
@@ -26,12 +26,12 @@ jest.mock('firebase/firestore', () => {
   };
 });
 
-// Pindahkan mock localStorage sebelum require() modul yang menggunakan localStorage
+// pindahkan mock localStorage sebelum require() modul yang menggunakan localStorage
 beforeAll(() => {
   const mockLocalStorage = {
     getItem: jest.fn((key) => {
       if (key === 'username') return 'testuser';
-      return null; // semua selain itu biarkan kosong agar Firebase Auth tidak error
+      return null; 
     }),
     setItem: jest.fn(),
     removeItem: jest.fn(),
@@ -41,7 +41,7 @@ beforeAll(() => {
     value: mockLocalStorage,
   });
 
-  // Baru require modul setelah mocking localStorage
+  // require modul setelah mocking localStorage
   const noteService = require('../src/lib/noteService');
   getAllNotes = noteService.getAllNotes;
   addNote = noteService.addNote;

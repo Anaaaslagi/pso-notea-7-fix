@@ -13,7 +13,7 @@ export default function RegisterPage() {
     e.preventDefault();
     try {
       await registerUser(email, password);
-      router.push('/login');
+      router.push('/');
     } catch (err) {
       alert('Gagal daftar: ' + err.message);
     }
@@ -41,7 +41,7 @@ export default function RegisterPage() {
         />
         <button type="submit" className="btn btn-success w-100">Daftar</button>
         <p className="mt-3 text-center">
-            Sudah punya akun? <Link href="/login">Login</Link>
+            Sudah punya akun? <Link href="/">Login</Link>
         </p>
       </form>
     </div>

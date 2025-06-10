@@ -1,76 +1,78 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import Home from '../src/pages/index';
-import * as noteService from '../src/lib/noteService';
+import LoginPage from '../src/pages/index';
+import * as authService from '../src/lib/authService';
+import { useRouter } from 'next/router';
 
-jest.mock('../src/lib/noteService');
+// mock authService dan useRouter
+jest.mock('../src/lib/authService', () => ({
+  loginUser: jest.fn(),
+}));
 
-describe('📒 Halaman Home - Catatan Simpel', () => {
-  const dummyNotes = [
-    { id: 1, title: 'Note 1', content: 'Content 1' },
-    { id: 2, title: 'Note 2', content: 'Content 2' }
-  ];
+jest.mock('next/router', () => ({
+  useRouter: jest.fn(),
+}));
+
+describe('LoginPage', () => {
+  const pushMock = jest.fn();
 
   beforeEach(() => {
-    noteService.getAllNotes.mockResolvedValue(dummyNotes);
-    noteService.addNote.mockResolvedValue({});
-    noteService.updateNote.mockResolvedValue({});
-    noteService.deleteNote.mockResolvedValue({});
+    jest.clearAllMocks();
+    useRouter.mockReturnValue({ push: pushMock });
   });
 
-  it('menampilkan catatan dari getAllNotes', async () => {
-    render(<Home />);
-    expect(await screen.findByText('Note 1')).toBeInTheDocument();
-    expect(screen.getByText('Note 2')).toBeInTheDocument();
+  it('should render form inputs and button', () => {
+    render(<LoginPage />);
+
+    expect(screen.getByPlaceholderText('Username')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Password')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /login/i })).toBeInTheDocument();
   });
 
-  it('menambah catatan baru saat form disubmit', async () => {
-    render(<Home />);
+  it('should call loginUser and redirect on success', async () => {
+    authService.loginUser.mockResolvedValueOnce();
 
-    fireEvent.change(screen.getByPlaceholderText('Judul'), {
-      target: { value: 'Catatan Baru' }
+    render(<LoginPage />);
+
+    // isi form login
+    fireEvent.change(screen.getByPlaceholderText('Username'), {
+      target: { value: 'testuser' },
     });
-    fireEvent.change(screen.getByPlaceholderText('Isi Catatan'), {
-      target: { value: 'Isi Baru' }
+    fireEvent.change(screen.getByPlaceholderText('Password'), {
+      target: { value: 'testpass' },
     });
 
-    fireEvent.click(screen.getByText('Tambah'));
+    fireEvent.click(screen.getByRole('button', { name: /login/i }));
+
+    // verifikasi login dan redirect
+    await waitFor(() => {
+      expect(authService.loginUser).toHaveBeenCalledWith('testuser', 'testpass');
+      expect(pushMock).toHaveBeenCalledWith('/home');
+    });
+
+    // cek apakah username disimpan di localStorage
+    expect(localStorage.getItem('username')).toBe('testuser');
+  });
+
+  it('should show alert and not redirect if login fails', async () => {
+    // login gagal
+    authService.loginUser.mockRejectedValueOnce(new Error('Invalid credentials'));
+    window.alert = jest.fn();
+
+    render(<LoginPage />);
+
+    fireEvent.change(screen.getByPlaceholderText('Username'), {
+      target: { value: 'wronguser' },
+    });
+    fireEvent.change(screen.getByPlaceholderText('Password'), {
+      target: { value: 'wrongpass' },
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /login/i }));
 
     await waitFor(() => {
-      expect(noteService.addNote).toHaveBeenCalledWith('Catatan Baru', 'Isi Baru');
+      expect(authService.loginUser).toHaveBeenCalledWith('wronguser', 'wrongpass');
+      expect(window.alert).toHaveBeenCalledWith('Login gagal: Invalid credentials');
+      expect(pushMock).not.toHaveBeenCalled();
     });
-  });
-
-  it('mengupdate catatan saat editId aktif', async () => {
-    render(<Home />);
-    await screen.findByText('Note 1');
-    
-    fireEvent.click(screen.getAllByText('Edit')[0]);
-    fireEvent.change(screen.getByPlaceholderText('Judul'), {
-      target: { value: 'Note 1 Edit' }
-    });
-    fireEvent.click(screen.getByText('Update'));
-
-    await waitFor(() => {
-      expect(noteService.updateNote).toHaveBeenCalledWith(1, {
-        title: 'Note 1 Edit',
-        content: 'Content 1'
-      });
-    });
-  });
-
-  it('menghapus catatan saat tombol Hapus diklik', async () => {
-    render(<Home />);
-    await screen.findByText('Note 1');
-    fireEvent.click(screen.getAllByText('Hapus')[0]);
-
-    await waitFor(() => {
-      expect(noteService.deleteNote).toHaveBeenCalledWith(1);
-    });
-  });
-
-  it('menampilkan teks jika tidak ada catatan', async () => {
-    noteService.getAllNotes.mockResolvedValue([]);
-    render(<Home />);
-    expect(await screen.findByText('Belum ada catatan.')).toBeInTheDocument();
   });
 });

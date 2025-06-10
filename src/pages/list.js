@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { getAllNotes } from '../lib/noteService';
 import React from 'react';
-import Link from 'next/link'; // ✅ Import Link dari Next.js
+import Link from 'next/link'; // Import Link dari Next.js
 
 export default function ListPage() {
   const [notes, setNotes] = useState([]);
