@@ -2,6 +2,7 @@ import React from 'react';
 import { useState } from 'react';
 import { useRouter } from 'next/router';
 import { registerUser } from '../lib/authService';
+import Link from 'next/link';
 
 export default function RegisterPage() {
   const [email, setEmail] = useState('');
@@ -40,7 +41,7 @@ export default function RegisterPage() {
         />
         <button type="submit" className="btn btn-success w-100">Daftar</button>
         <p className="mt-3 text-center">
-          Sudah punya akun? <a href="/login">Login</a>
+            Sudah punya akun? <Link href="/login">Login</Link>
         </p>
       </form>
     </div>
