@@ -22,5 +22,4 @@ jobs:
         with:
           service: ${{ secrets.GCP_SERVICE }}
           region: ${{ secrets.GCP_REGION }}
-          # Deploy image dengan tag SHA dari CI yang memicu
           image: ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/docker-repo/notea:${{ github.event.workflow_run.head_sha }}

@@ -1,97 +1,52 @@
-import { useEffect, useState } from 'react';
-import { addNote, getAllNotes, deleteNote, updateNote } from '../lib/noteService';
-import React from 'react';
-import Link from 'next/link'; // ✅ Import Link
+import React, { useState } from 'react';
+import { useRouter } from 'next/router';
+import { loginUser } from '../lib/authService';
+import Link from 'next/link';
 
-export default function Home() {
-  const [notes, setNotes] = useState([]);
-  const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
-  const [editId, setEditId] = useState(null);
+export default function LoginPage() {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const router = useRouter();
 
-  const loadNotes = async () => {
-    const result = await getAllNotes();
-    setNotes(result);
-  };
-
-  useEffect(() => {
-    loadNotes();
-  }, []);
-
-  const handleSubmit = async (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    if (editId) {
-      await updateNote(editId, { title, content });
-      setEditId(null);
-    } else {
-      await addNote(title, content);
+    try {
+      await loginUser(username, password); // pakai Firebase Auth
+      localStorage.setItem('username', username);
+      console.log('✅ Login berhasil!');
+      router.push('/home'); // redirect ke halaman catatan
+    } catch (err) {
+      console.error('❌ Login gagal:', err.message);
+      alert('Login gagal: ' + err.message);
     }
-    setTitle('');
-    setContent('');
-    loadNotes();
-  };
-
-  const handleDelete = async (id) => {
-    await deleteNote(id);
-    loadNotes();
-  };
-
-  const handleEdit = (note) => {
-    setEditId(note.id);
-    setTitle(note.title);
-    setContent(note.content);
   };
 
   return (
-    <div className="container mt-4">
-      <nav className="mb-4 d-flex flex-wrap gap-2">
-        <Link href="/" className="me-3 text-decoration-none">🏠 Home</Link>
-        <Link href="/new" className="me-3 text-decoration-none">➕ Tambah</Link>
-        <Link href="/archive" className="me-3 text-decoration-none">📦 Arsip</Link>
-        <Link href="/about" className="text-decoration-none">ℹ️ Tentang</Link>
-        <Link href="/list" className="me-3 text-decoration-none">📋 Daftar</Link>
-      </nav>
-
-      <h1 className="mb-4">📒 Catatan Simpel</h1>
-
-      <form onSubmit={handleSubmit} className="mb-4">
+    <div className="container mt-5">
+      <h2 className="text-center mb-4">Login ke Notea</h2>
+      <form onSubmit={handleLogin} className="mx-auto" style={{ maxWidth: '400px' }}>
         <input
-          className="form-control mb-2"
-          placeholder="Judul"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
+          type="text"
+          className="form-control mb-3"
+          placeholder="Username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          required
         />
-        <textarea
-          className="form-control mb-2"
-          placeholder="Isi Catatan"
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
+        <input
+          type="password"
+          className="form-control mb-3"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
         />
-        <button type="submit" className="btn btn-primary">
-          {editId ? 'Update' : 'Tambah'}
-        </button>
-      </form>
+        <button type="submit" className="btn btn-primary w-100">Login</button>
 
-      {notes.length === 0 ? (
-        <p className="text-muted">Belum ada catatan.</p>
-      ) : (
-        <div className="row">
-          {notes.map(note => (
-            <div key={note.id} className="col-md-6 mb-3">
-              <div className="card h-100">
-                <div className="card-body">
-                  <h5 className="card-title">{note.title}</h5>
-                  <p className="card-text">{note.content}</p>
-                </div>
-                <div className="card-footer d-flex justify-content-end">
-                  <button className="btn btn-sm btn-warning me-2" onClick={() => handleEdit(note)}>Edit</button>
-                  <button className="btn btn-sm btn-danger" onClick={() => handleDelete(note.id)}>Hapus</button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+        <p className="mt-3 text-center">
+            Belum punya akun? <Link href="/register">Daftar</Link>
+        </p>
+      </form>
     </div>
   );
 }

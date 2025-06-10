@@ -8,7 +8,7 @@ export default function ArchivePage() {
   useEffect(() => {
     const fetch = async () => {
       const all = await getAllNotes();
-      const archived = all.filter(note => note.archived); // misalnya ada field "archived"
+      const archived = all.filter(note => note.archived); 
       setNotes(archived);
     };
     fetch();
