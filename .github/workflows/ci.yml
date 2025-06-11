@@ -1,12 +1,10 @@
-name: CI/CD Pipeline
+name: CI Pipeline
 
 on:
   push:
-    branches:
-      - '**'
+    branches: ["**"]
 
 jobs:
-  # Job untuk pengecekan kualitas kode (ESLint)
   code-quality:
     runs-on: ubuntu-latest
     steps:
@@ -18,7 +16,6 @@ jobs:
       - name: Run ESLint
         run: yarn lint
 
-  # Job untuk menjalankan unit test
   test:
     runs-on: ubuntu-latest
     steps:
@@ -29,6 +26,13 @@ jobs:
       - run: yarn install --frozen-lockfile
       - name: Run tests with coverage
         run: yarn test --coverage
+
+      - name: Set environment variable to disable Sentry in testing
+        run: |
+          export SENTRY_DSN=""  # Pastikan SENTRY_DSN kosong selama testing
+          yarn test --coverage
+
+        
       - name: Show coverage file
         run: ls -R coverage
 
@@ -46,7 +50,7 @@ jobs:
             -Dsonar.test.inclusions=**/__tests__/**,**/*.test.js
             -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
 
-  # Job untuk membangun aplikasi
+
   build:
     runs-on: ubuntu-latest
     needs: [test, code-quality]
@@ -59,9 +63,8 @@ jobs:
       - run: yarn install --frozen-lockfile
       - run: |
           export SENTRY_DSN="${{ secrets.SENTRY_DSN }}"
-          yarn build 
+          yarn build
 
-  # Job untuk Dockerize aplikasi dan deploy ke Cloud Run
   dockerize:
     runs-on: ubuntu-latest
     needs: build
@@ -78,11 +81,11 @@ jobs:
 
       - name: Build and Push Docker image with Commit SHA Tag
         run: |
-          IMAGE_TAG="${{ github.sha }}" 
+          IMAGE_TAG="${{ github.sha }}" # Menggunakan SHA commit sebagai tag
           FULL_IMAGE_NAME="${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/docker-repo/notea:$IMAGE_TAG"
           
           echo "Building image: $FULL_IMAGE_NAME"
-          docker build -t $FULL_IMAGE_NAME . 
+          docker build -t $FULL_IMAGE_NAME .
           
           echo "Pushing image: $FULL_IMAGE_NAME"
           docker push $FULL_IMAGE_NAME
