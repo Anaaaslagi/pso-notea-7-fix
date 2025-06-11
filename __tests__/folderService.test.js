@@ -4,7 +4,8 @@ import {
   updateFolder,
   deleteFolder,
   getFolderById
-} from '../src/lib/folderService'; 
+} from '../src/lib/folderService';
+
 import {
   collection,
   addDoc,
@@ -17,151 +18,128 @@ import {
   getDoc
 } from 'firebase/firestore';
 
+// Mock db (Firebase instance)
 jest.mock('../src/lib/firebase', () => ({
-  db: {}, 
+  db: {},
 }));
 
-jest.mock('firebase/app', () => ({
-  initializeApp: jest.fn(),
-  getApp: jest.fn(() => ({})),
-  getApps: jest.fn(() => []),
-}));
-
+// Firestore function mock
 jest.mock('firebase/firestore', () => ({
-  getFirestore: jest.fn(() => ({})),
-  collection: jest.fn(),
+  collection: jest.fn(() => ({ __type: 'collection', name: 'folders' })),
   addDoc: jest.fn(),
   getDocs: jest.fn(),
-  query: jest.fn(),
-  where: jest.fn(),
-  doc: jest.fn(),
+  query: jest.fn((...args) => ({ __type: 'query', args })),
+  where: jest.fn((field, op, value) => ({ __type: 'where', field, op, value })),
+  doc: jest.fn((db, collectionName, id) =>
+    ({ __type: 'doc', db, collectionName, id })
+  ),
   updateDoc: jest.fn(),
   deleteDoc: jest.fn(),
   getDoc: jest.fn(),
 }));
 
-// Karena error juga menyebutkan 'firebase/auth', meskipun tidak digunakan langsung di folderService.js,
-// keberadaannya di firebase.js mungkin memicu masalah. Tetap pertahankan mock ini.
-jest.mock('firebase/auth', () => ({
-  getAuth: jest.fn(() => ({})),
-}));
+describe('folderService', () => {
+  const db = require('../src/lib/firebase').db;
 
-describe('Folder Service', () => {
   afterEach(() => {
     jest.clearAllMocks();
   });
 
   describe('getAllFolders', () => {
-    it('should return all folders for a given user ID', async () => {
-      const mockDocs = [{
-        id: 'folder1',
-        data: () => ({
-          userId: 'user123',
-          name: 'My Folder 1'
-        })
-      }, {
-        id: 'folder2',
-        data: () => ({
-          userId: 'user123',
-          name: 'My Folder 2'
-        })
-      }];
+    it('should return all folders for a given userId', async () => {
+      // mock getDocs to return 2 folders
       getDocs.mockResolvedValueOnce({
-        docs: mockDocs
+        docs: [
+          { id: 'f1', data: () => ({ userId: 'u1', name: 'Folder 1' }) },
+          { id: 'f2', data: () => ({ userId: 'u1', name: 'Folder 2' }) },
+        ]
       });
 
-      const result = await getAllFolders('user123');
-      expect(query).toHaveBeenCalledWith(collection(), where('userId', '==', 'user123'));
+      const result = await getAllFolders('u1');
+
+      // Expect query built with correct args
+      expect(collection).toHaveBeenCalledWith(db, "folders");
+      expect(where).toHaveBeenCalledWith("userId", "==", "u1");
+      expect(query).toHaveBeenCalledWith(
+        { __type: 'collection', name: 'folders' },
+        { __type: 'where', field: 'userId', op: '==', value: 'u1' }
+      );
       expect(getDocs).toHaveBeenCalled();
-      expect(result).toEqual([{
-        id: 'folder1',
-        userId: 'user123',
-        name: 'My Folder 1'
-      }, {
-        id: 'folder2',
-        userId: 'user123',
-        name: 'My Folder 2'
-      }]);
+
+      expect(result).toEqual([
+        { id: 'f1', userId: 'u1', name: 'Folder 1' },
+        { id: 'f2', userId: 'u1', name: 'Folder 2' },
+      ]);
     });
 
-    it('should return an empty array if no folders are found', async () => {
-      getDocs.mockResolvedValueOnce({
-        docs: []
-      });
-
-      const result = await getAllFolders('nonexistentUser');
-      expect(query).toHaveBeenCalledWith(collection(), where('userId', '==', 'nonexistentUser'));
-      expect(getDocs).toHaveBeenCalled();
+    it('should return empty array if no folders found', async () => {
+      getDocs.mockResolvedValueOnce({ docs: [] });
+      const result = await getAllFolders('none');
       expect(result).toEqual([]);
     });
   });
 
   describe('addFolder', () => {
     it('should add a new folder and return its ID', async () => {
-      const mockDocRef = {
-        id: 'newFolder123'
-      };
-      addDoc.mockResolvedValueOnce(mockDocRef);
+      addDoc.mockResolvedValueOnce({ id: 'newfolderid' });
 
-      const result = await addFolder('user456', 'New Project Folder');
-      expect(addDoc).toHaveBeenCalledWith(collection(), {
-        userId: 'user456',
-        name: 'New Project Folder',
-        createdAt: expect.any(Date)
-      });
-      expect(result).toBe('newFolder123');
+      const result = await addFolder('u1', 'My Folder');
+      expect(collection).toHaveBeenCalledWith(db, "folders");
+      expect(addDoc).toHaveBeenCalledWith(
+        { __type: 'collection', name: 'folders' },
+        { userId: 'u1', name: 'My Folder', createdAt: expect.any(Date) }
+      );
+      expect(result).toBe('newfolderid');
     });
   });
 
   describe('updateFolder', () => {
-    it('should update the name of an existing folder', async () => {
-      updateDoc.mockResolvedValueOnce();
-
-      await updateFolder('folderToUpdate', 'Renamed Folder');
-      expect(updateDoc).toHaveBeenCalledWith(doc(), {
-        name: 'Renamed Folder',
-        updatedAt: expect.any(Date)
-      });
+    it('should update the folder name with newName', async () => {
+      updateDoc.mockResolvedValueOnce(undefined);
+      await updateFolder('f3', 'Updated Name');
+      expect(doc).toHaveBeenCalledWith(db, "folders", "f3");
+      expect(updateDoc).toHaveBeenCalledWith(
+        { __type: 'doc', db, collectionName: 'folders', id: 'f3' },
+        { name: 'Updated Name', updatedAt: expect.any(Date) }
+      );
     });
   });
 
   describe('deleteFolder', () => {
-    it('should delete a folder by its ID', async () => {
-      deleteDoc.mockResolvedValueOnce();
-
-      await deleteFolder('folderToDelete');
-      expect(deleteDoc).toHaveBeenCalledWith(doc());
+    it('should delete folder by id', async () => {
+      deleteDoc.mockResolvedValueOnce(undefined);
+      await deleteFolder('f4');
+      expect(doc).toHaveBeenCalledWith(db, "folders", "f4");
+      expect(deleteDoc).toHaveBeenCalledWith(
+        { __type: 'doc', db, collectionName: 'folders', id: 'f4' }
+      );
     });
   });
 
   describe('getFolderById', () => {
-    it('should return folder data for a given folder ID', async () => {
-      const mockSnap = {
-        id: 'folder1',
-        data: () => ({
-          userId: 'user123',
-          name: 'My Folder 1'
-        }),
-        exists: () => true
-      };
-      getDoc.mockResolvedValueOnce(mockSnap);
-
-      const result = await getFolderById('folder1');
-      expect(getDoc).toHaveBeenCalledWith(doc(), 'folder1');
-      expect(result).toEqual({
-        id: 'folder1',
-        userId: 'user123',
-        name: 'My Folder 1'
+    it('should return folder data if exists', async () => {
+      getDoc.mockResolvedValueOnce({
+        exists: () => true,
+        id: 'f5',
+        data: () => ({ userId: 'u2', name: 'Special Folder' }),
       });
+      const result = await getFolderById('f5');
+      expect(doc).toHaveBeenCalledWith(db, "folders", "f5");
+      expect(getDoc).toHaveBeenCalledWith(
+        { __type: 'doc', db, collectionName: 'folders', id: 'f5' }
+      );
+      expect(result).toEqual({ id: 'f5', userId: 'u2', name: 'Special Folder' });
     });
 
-    it('should return null if folder is not found', async () => {
-      getDoc.mockResolvedValueOnce({
-        exists: () => false
-      });
+    it('should return null if folder does not exist', async () => {
+      getDoc.mockResolvedValueOnce({ exists: () => false });
+      const result = await getFolderById('notfound');
+      expect(doc).toHaveBeenCalledWith(db, "folders", "notfound");
+      expect(result).toBeNull();
+    });
 
-      const result = await getFolderById('nonExistentFolder');
-      expect(getDoc).toHaveBeenCalledWith(doc(), 'nonExistentFolder');
+    it('should return null if id is falsy', async () => {
+      const result = await getFolderById('');
       expect(result).toBeNull();
     });
   });
