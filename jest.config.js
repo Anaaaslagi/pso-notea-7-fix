@@ -38,8 +38,7 @@ export default {
     '<rootDir>/src/pages/_document.js',
     '<rootDir>/src/pages/api/',
     '<rootDir>/src/pages/about.js',
-    '<rootDir>/src/pages/new.js',
-    '<rootDir>/src/pages/archives.js'
+    '<rootDir>/src/pages/new.js'
   ],
   collectCoverageFrom: [
     'src/pages/**/*.{js,jsx,ts,tsx}',
@@ -48,7 +47,6 @@ export default {
     '!src/pages/api/**',
     '!src/pages/about.js',
     '!src/pages/new.js',
-    '!src/pages/archives.js',
     '!**/*.config.js',
     '!**/*.setup.js'
   ],
