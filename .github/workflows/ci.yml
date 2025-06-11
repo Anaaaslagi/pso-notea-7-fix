@@ -58,9 +58,8 @@ jobs:
 
       - run: yarn install --frozen-lockfile
       - run: |
-          # Setel DSN untuk Sentry di build
           export SENTRY_DSN="${{ secrets.SENTRY_DSN }}"
-          yarn build --sentry-dsn=$SENTRY_DSN
+          yarn build 
 
   # Job untuk Dockerize aplikasi dan deploy ke Cloud Run
   dockerize:
