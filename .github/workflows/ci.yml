@@ -1,4 +1,4 @@
-name: CI/CD Pipeline
+name: CI Pipeline
 
 on:
   push:
@@ -57,9 +57,7 @@ jobs:
           node-version: 18
 
       - run: yarn install --frozen-lockfile
-      - run: |
-          export SENTRY_DSN="${{ secrets.SENTRY_DSN }}"
-          yarn build 
+      - run: yarn build
 
   # Job untuk Dockerize aplikasi dan deploy ke Cloud Run
   dockerize:
@@ -78,11 +76,11 @@ jobs:
 
       - name: Build and Push Docker image with Commit SHA Tag
         run: |
-          IMAGE_TAG="${{ github.sha }}" 
+          IMAGE_TAG="${{ github.sha }}" # Menggunakan SHA commit sebagai tag
           FULL_IMAGE_NAME="${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/docker-repo/notea:$IMAGE_TAG"
-          
+
           echo "Building image: $FULL_IMAGE_NAME"
-          docker build -t $FULL_IMAGE_NAME . 
+          docker build -t $FULL_IMAGE_NAME .
           
           echo "Pushing image: $FULL_IMAGE_NAME"
           docker push $FULL_IMAGE_NAME

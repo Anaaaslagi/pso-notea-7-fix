@@ -12,6 +12,8 @@
   },
   "dependencies": {
     "@sentry/nextjs": "^9.28.1",
+    "@sentry/node": "^9.28.1",
+    "@sentry/react": "^9.28.1",
     "bootstrap": "^5.3.6",
     "firebase": "^11.8.1",
     "next": "15.3.3",
