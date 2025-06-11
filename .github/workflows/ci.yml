@@ -1,8 +1,9 @@
+# .github/workflows/ci.yml
 name: CI Pipeline
 
 on:
   push:
-    branches: ["**"]
+    branches: [""]
 
 jobs:
   code-quality:
@@ -39,8 +40,8 @@ jobs:
             -Dsonar.projectKey=Anaaaslagi_pso-backups
             -Dsonar.organization=anaaaslagi
             -Dsonar.sources=src
-            -Dsonar.exclusions=**/node_modules/**,**/.next/**,**/public/**
-            -Dsonar.test.inclusions=**/__tests__/**,**/*.test.js
+            -Dsonar.exclusions=/node_modules/,/.next/,/public/**
+            -Dsonar.test.inclusions=/_tests_/,/*.test.js
             -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
 
 
@@ -54,7 +55,14 @@ jobs:
           node-version: 18
 
       - run: yarn install --frozen-lockfile
-      - run: yarn build
+      - name: Build Next.js app
+        run: yarn build
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+          NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
 
   dockerize:
     runs-on: ubuntu-latest
@@ -72,11 +80,12 @@ jobs:
 
       - name: Build and Push Docker image with Commit SHA Tag
         run: |
-          IMAGE_TAG="${{ github.sha }}" # Menggunakan SHA commit sebagai tag
+          # Gunakan ${{ github.sha }} untuk mendapatkan SHA commit yang memicu workflow ini
+          IMAGE_TAG="${{ github.sha }}"
           FULL_IMAGE_NAME="${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/docker-repo/notea:$IMAGE_TAG"
-          
+
           echo "Building image: $FULL_IMAGE_NAME"
           docker build -t $FULL_IMAGE_NAME .
-          
+
           echo "Pushing image: $FULL_IMAGE_NAME"
           docker push $FULL_IMAGE_NAME
