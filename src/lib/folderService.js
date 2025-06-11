@@ -8,6 +8,7 @@ import {
   doc,
   updateDoc,
   deleteDoc,
+  getDoc
 } from 'firebase/firestore';
 
 /**
@@ -56,4 +57,16 @@ export async function updateFolder(folderId, newName) {
  */
 export async function deleteFolder(folderId) {
   await deleteDoc(doc(db, "folders", folderId));
+}
+
+export async function getFolderById(id) {
+  if (!id) return null;
+  const ref = doc(db, "folders", id);
+  const snap = await getDoc(ref);
+  if (snap.exists()) {
+    // return folder data + id
+    return { id: snap.id, ...snap.data() };
+  } else {
+    return null;
+  }
 }
