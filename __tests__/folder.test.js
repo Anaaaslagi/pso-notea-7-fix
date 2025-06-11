@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import FolderPage from '../src/pages/folder'; 
-import { getNotesByFolder } from '../src/lib/noteService';
+import { getNotesByFolder, deleteNote } from '../src/lib/noteService';
 import { getFolderById } from '../src/lib/folderService';
 import Swal from 'sweetalert2';
 import { useRouter } from 'next/router';
@@ -30,6 +30,7 @@ describe('FolderPage', () => {
 
     getFolderById.mockResolvedValue(mockFolder);
     getNotesByFolder.mockResolvedValue(mockNotes);
+    deleteNote.mockResolvedValue();
     Swal.fire.mockResolvedValue({ isConfirmed: true });
   });
 
@@ -38,21 +39,16 @@ describe('FolderPage', () => {
   });
 
   it('should render loading state initially', () => {
-    getFolderById.mockResolvedValueOnce(null); 
-    getNotesByFolder.mockResolvedValueOnce([]);
-
+    // Render dengan loading state
+    getFolderById.mockImplementation(() => new Promise(() => {}));
     render(<FolderPage />);
-
     expect(screen.getByText('Loading...')).toBeInTheDocument();
   });
 
   it('should display folder name and notes', async () => {
     render(<FolderPage />);
 
-    await waitFor(() => expect(getFolderById).toHaveBeenCalledWith('1'));
-    await waitFor(() => expect(getNotesByFolder).toHaveBeenCalledWith('1'));
-
-    expect(screen.getByText('📁 Test Folder')).toBeInTheDocument();
+    expect(await screen.findByText('📁 Test Folder')).toBeInTheDocument();
     expect(screen.getByText('Note 1')).toBeInTheDocument();
     expect(screen.getByText('Note 2')).toBeInTheDocument();
   });
@@ -62,45 +58,66 @@ describe('FolderPage', () => {
 
     render(<FolderPage />);
 
-    await waitFor(() => expect(getNotesByFolder).toHaveBeenCalledWith('1'));
-
-    expect(screen.getByText('Belum ada catatan di folder ini.')).toBeInTheDocument();
+    expect(await screen.findByText('Belum ada catatan di folder ini.')).toBeInTheDocument();
   });
 
   it('should call handleDeleteNote and delete the note when confirmed', async () => {
     render(<FolderPage />);
-
+    await screen.findByText('Note 1');
     const deleteButton = screen.getAllByText('Hapus')[0];
     fireEvent.click(deleteButton);
 
-    expect(Swal.fire).toHaveBeenCalledWith(
-      expect.objectContaining({
-        title: 'Yakin hapus catatan?',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Ya, hapus',
-        cancelButtonText: 'Batal',
-      })
-    );
-
-    await waitFor(() => {
+    await waitFor(() =>
       expect(Swal.fire).toHaveBeenCalledWith(
         expect.objectContaining({
-          title: 'Catatan berhasil dihapus!',
-          icon: 'success',
+          title: 'Yakin hapus catatan?',
+          icon: 'warning',
         })
-      );
-    });
+      )
+    );
 
-    expect(getNotesByFolder).toHaveBeenCalledTimes(2); 
+    await waitFor(() => expect(deleteNote).toHaveBeenCalledWith('1'));
+    // Cek dialog sukses
+    await waitFor(() =>
+      expect(Swal.fire).toHaveBeenCalledWith(
+        "Catatan berhasil dihapus!", "", "success"
+      )
+    );
   });
 
-  it('should handle back navigation', () => {
+  it('should not call deleteNote if user cancels deletion', async () => {
+    Swal.fire.mockResolvedValueOnce({ isConfirmed: false }); // cancel
     render(<FolderPage />);
+    await screen.findByText('Note 1');
+    const deleteButton = screen.getAllByText('Hapus')[0];
+    fireEvent.click(deleteButton);
 
-    const backButton = screen.getByText('← Kembali ke Folder');
-    fireEvent.click(backButton);
+    await waitFor(() =>
+      expect(Swal.fire).toHaveBeenCalledWith(
+        expect.objectContaining({ title: 'Yakin hapus catatan?' })
+      )
+    );
 
-    expect(window.location.pathname).toBe('/home');
+    expect(deleteNote).not.toHaveBeenCalled();
+  });
+
+  it('should have edit link for each note', async () => {
+    render(<FolderPage />);
+    await screen.findByText('Note 1');
+    const editLinks = screen.getAllByText('Edit');
+    expect(editLinks[0].closest('a')).toHaveAttribute('href', '/note-detail?id=1');
+    expect(editLinks[1].closest('a')).toHaveAttribute('href', '/note-detail?id=2');
+  });
+
+  it('should display "Folder Tidak Ditemukan" if folder is null', async () => {
+    getFolderById.mockResolvedValueOnce(null);
+    render(<FolderPage />);
+    expect(await screen.findByText('Folder Tidak Ditemukan')).toBeInTheDocument();
+  });
+
+  it('should have a link to home', async () => {
+    render(<FolderPage />);
+    const backLink = screen.getByText('← Kembali ke Home');
+    expect(backLink.closest('a')).toHaveAttribute('href', '/home');
   });
 });
