@@ -17,7 +17,7 @@ export default function ListPage() {
   return (
     <div className="container mt-5">
       <nav className="mb-4">
-        <Link href="/" className="me-3 text-decoration-none">🏠 Home</Link>
+        <Link href="/home" className="me-3 text-decoration-none">🏠 Home</Link>
         <Link href="/list" className="me-3 text-decoration-none fw-bold">📋 Daftar Catatan</Link>
         <Link href="/new" className="me-3 text-decoration-none">➕ Tambah</Link>
         <Link href="/about" className="text-decoration-none">ℹ️ Tentang</Link>
