@@ -3,7 +3,7 @@ import * as Sentry from "@sentry/nextjs";
 import { useState, useEffect } from "react";
 
 class SentryExampleFrontendError extends Error {
-  constructor(message: string | undefined) {
+  constructor(message) {
     super(message);
     this.name = "SentryExampleFrontendError";
   }
