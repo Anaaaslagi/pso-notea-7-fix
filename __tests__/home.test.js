@@ -1,100 +1,174 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import Home from '../src/pages/home';
+import * as folderService from '../src/lib/folderService';
 import * as noteService from '../src/lib/noteService';
+import Swal from 'sweetalert2';
 
-// mock semua fungsi yang digunakan dari noteService
-jest.mock('../src/lib/noteService', () => ({
-  getAllNotes: jest.fn(),
-  addNote: jest.fn(),
-  updateNote: jest.fn(),
-  deleteNote: jest.fn(),
-}));
+// Mock dependencies
+jest.mock('../src/lib/folderService');
+jest.mock('../src/lib/noteService');
+jest.mock('sweetalert2');
 
-describe('Home Page', () => {
-  // reset mocks setiap test
+describe('Home Component', () => {
+  const mockUsername = 'testUser';
+
   beforeEach(() => {
+    // Mock the Swal.fire to simulate a user selecting a folder
+    Swal.fire.mockResolvedValueOnce({ isConfirmed: true, value: '1' });
+
+    localStorage.setItem('username', mockUsername);
+    folderService.getAllFolders.mockResolvedValue([
+      { id: '1', name: 'Folder 1' },
+      { id: '2', name: 'Folder 2' },
+    ]);
+    noteService.getAllNotes.mockResolvedValue([
+      { id: '1', title: 'Note 1', content: 'Content 1' },
+      { id: '2', title: 'Note 2', content: 'Content 2' },
+    ]);
+    noteService.getNotesByFolder.mockResolvedValue([]);
+  });
+
+  afterEach(() => {
     jest.clearAllMocks();
   });
 
-  it('should render empty state if no notes', async () => {
-    // tidak ada catatan
+  it('should render the component correctly', async () => {
+    render(<Home />);
+
+    // Ensure username is loaded
+    expect(screen.getByText(/📒 Catatan Simpel/i)).toBeInTheDocument();
+    expect(await screen.findByText('Pilih Folder')).toBeInTheDocument();
+    expect(await screen.findByText('Tambah Folder Baru')).toBeInTheDocument();
+    expect(await screen.findByText('🏠 Home')).toBeInTheDocument();
+  });
+
+  it('should load folders on username set', async () => {
+    render(<Home />);
+
+    // Ensure folders are loaded correctly
+    await waitFor(() => expect(folderService.getAllFolders).toHaveBeenCalled());
+    expect(await screen.findByText('Folder 1')).toBeInTheDocument();
+    expect(await screen.findByText('Folder 2')).toBeInTheDocument();
+  });
+
+  it('should show all notes when no folder is selected', async () => {
+    render(<Home />);
+
+    // Ensure notes are loaded when no folder is selected
+    await waitFor(() => expect(noteService.getAllNotes).toHaveBeenCalled());
+    expect(await screen.findByText('Note 1')).toBeInTheDocument();
+    expect(await screen.findByText('Note 2')).toBeInTheDocument();
+  });
+
+  it('should handle folder selection', async () => {
+    render(<Home />);
+
+    // Open folder selection modal
+    const selectFolderButton = screen.getByText('Pilih Folder');
+    fireEvent.click(selectFolderButton);
+
+    // Simulate folder selection
+    await waitFor(() => expect(Swal.fire).toHaveBeenCalled());
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: '1' } });
+    fireEvent.click(screen.getByText('Pilih'));
+
+    expect(screen.getByText('Folder 1')).toBeInTheDocument();
+    expect(await screen.findByText('Note 1')).toBeInTheDocument();
+  });
+
+  it('should handle folder add', async () => {
+    render(<Home />);
+
+    const folderInput = screen.getByPlaceholderText('Tambah Folder Baru');
+    const addFolderButton = screen.getByText('Tambah Folder');
+    
+    fireEvent.change(folderInput, { target: { value: 'New Folder' } });
+    fireEvent.click(addFolderButton);
+    
+    await waitFor(() => expect(folderService.addFolder).toHaveBeenCalled());
+    expect(folderService.addFolder).toHaveBeenCalledWith(mockUsername, 'New Folder');
+  });
+
+  it('should handle folder delete', async () => {
+    render(<Home />);
+
+    const deleteFolderButton = screen.getByText('Hapus Folder');
+    fireEvent.click(deleteFolderButton);
+
+    // Ensure confirmation modal appears
+    expect(Swal.fire).toHaveBeenCalledWith(expect.objectContaining({
+      title: 'Yakin hapus folder?',
+    }));
+
+    Swal.fire.mockResolvedValueOnce({ isConfirmed: true });
+
+    await waitFor(() => expect(folderService.deleteFolder).toHaveBeenCalled());
+    expect(folderService.deleteFolder).toHaveBeenCalledWith('1');
+  });
+
+  it('should handle note delete', async () => {
+    render(<Home />);
+
+    const deleteNoteButton = screen.getByText('Hapus');
+    fireEvent.click(deleteNoteButton);
+
+    // Ensure confirmation modal appears
+    expect(Swal.fire).toHaveBeenCalledWith(expect.objectContaining({
+      title: 'Yakin hapus catatan?',
+    }));
+
+    Swal.fire.mockResolvedValueOnce({ isConfirmed: true });
+
+    await waitFor(() => expect(noteService.deleteNote).toHaveBeenCalled());
+    expect(noteService.deleteNote).toHaveBeenCalledWith('1');
+  });
+
+  it('should handle note click for detail view', async () => {
+    render(<Home />);
+
+    const noteCard = screen.getByText('Note 1');
+    fireEvent.click(noteCard);
+
+    expect(window.location.href).toContain('/note-detail/1');
+  });
+
+  it('should handle edit folder', async () => {
+    render(<Home />);
+
+    const editFolderButton = screen.getByText('Edit Folder');
+    fireEvent.click(editFolderButton);
+
+    const input = screen.getByRole('textbox');
+    fireEvent.change(input, { target: { value: 'Updated Folder' } });
+
+    const saveButton = screen.getByText('Simpan');
+    fireEvent.click(saveButton);
+
+    await waitFor(() => expect(folderService.updateFolder).toHaveBeenCalled());
+    expect(folderService.updateFolder).toHaveBeenCalledWith('1', 'Updated Folder');
+  });
+
+  it('should display empty state when no notes exist', async () => {
     noteService.getAllNotes.mockResolvedValueOnce([]);
 
     render(<Home />);
+
     expect(await screen.findByText('Belum ada catatan.')).toBeInTheDocument();
   });
 
-  it('should show notes if data exists', async () => {
-    // ada catatan
-    noteService.getAllNotes.mockResolvedValueOnce([
-      { id: '1', title: 'Note 1', content: 'Isi 1' }
-    ]);
-
+  it('should handle folder selection and update selectedFolder state', async () => {
     render(<Home />);
 
-    // tunggu catatan tampil
-    expect(await screen.findByText('Note 1')).toBeInTheDocument();
-    expect(screen.getByText('Isi 1')).toBeInTheDocument();
-  });
+    // Simulate folder selection
+    const selectFolderButton = screen.getByText('Pilih Folder');
+    fireEvent.click(selectFolderButton);
 
-  it('should show alert if title or content is empty on submit', async () => {
-    // mock alert
-    window.alert = jest.fn();
+    // Simulate folder selection with mock
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: '1' } });
+    fireEvent.click(screen.getByText('Pilih'));
 
-    render(<Home />);
-    
-    // submit tanpa input
-    fireEvent.click(screen.getByRole('button', { name: /tambah/i }));
-    
-    expect(window.alert).toHaveBeenCalledWith('Judul dan isi catatan tidak boleh kosong.');
-  });
-
-  it('should add note when form is submitted with title and content', async () => {
-    noteService.getAllNotes.mockResolvedValue([]); // untuk reload
-    noteService.addNote.mockResolvedValueOnce();
-
-    render(<Home />);
-
-    // isi form
-    fireEvent.change(screen.getByPlaceholderText('Judul'), { target: { value: 'Baru' } });
-    fireEvent.change(screen.getByPlaceholderText('Isi Catatan'), { target: { value: 'Konten baru' } });
-    fireEvent.click(screen.getByRole('button', { name: /tambah/i }));
-
-    await waitFor(() => {
-      expect(noteService.addNote).toHaveBeenCalledWith('Baru', 'Konten baru');
-    });
-  });
-
-  it('should call deleteNote when delete button is clicked', async () => {
-    noteService.getAllNotes.mockResolvedValueOnce([
-      { id: '1', title: 'Hapus Ini', content: 'Konten' }
-    ]);
-    noteService.deleteNote.mockResolvedValueOnce();
-    noteService.getAllNotes.mockResolvedValueOnce([]); // reload
-
-    render(<Home />);
-
-    expect(await screen.findByText('Hapus Ini')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: /hapus/i }));
-
-    await waitFor(() => {
-      expect(noteService.deleteNote).toHaveBeenCalledWith('1');
-    });
-  });
-
-  it('should enter edit mode and populate input', async () => {
-    const mockNote = { id: '1', title: 'Judul Lama', content: 'Isi Lama' };
-    noteService.getAllNotes.mockResolvedValueOnce([mockNote]);
-
-    render(<Home />);
-    
-    expect(await screen.findByText('Judul Lama')).toBeInTheDocument();
-
-    //  klik edit
-    fireEvent.click(screen.getByRole('button', { name: /edit/i }));
-
-    // validasi input terisi dengan data lama
-    expect(screen.getByDisplayValue('Judul Lama')).toBeInTheDocument();
-    expect(screen.getByDisplayValue('Isi Lama')).toBeInTheDocument();
+    // Verify selected folder state is updated
+    await waitFor(() => expect(screen.getByText('Folder 1')).toBeInTheDocument());
+    expect(await screen.queryByText('Menampilkan seluruh catatan')).not.toBeInTheDocument();
   });
 });
