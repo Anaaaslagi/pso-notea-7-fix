@@ -45,11 +45,11 @@ export default function FolderPage() {
   if (loading) return <div className="container mt-4">Loading...</div>;
 
   return (
-    <div className="container mt-4">
-      <nav className="mb-3">
-        <Link href="/home" className="btn btn-link">← Kembali ke Folder</Link>
+    <div className="container mt-5">
+      <nav className="mb-4 d-flex flex-wrap gap-2">
+        <Link href="/home" className="btn btn-link">← Kembali ke Home</Link>
       </nav>
-      <h2 className="mb-4">📁 {folder ? folder.name : "Folder Tidak Ditemukan"}</h2>
+      <h1 className="mb-4">📁 {folder ? folder.name : "Folder Tidak Ditemukan"}</h1>
 
       {(!notes || notes.length === 0) ? (
         <p className="text-muted">Belum ada catatan di folder ini.</p>
