@@ -2,8 +2,9 @@ import {
   getAllFolders,
   addFolder,
   updateFolder,
-  deleteFolder
-} from '../src/lib/folderService'; // Ubah path sesuai dengan lokasi folderService.js
+  deleteFolder,
+  getFolderById
+} from '../src/lib/folderService'; 
 import {
   collection,
   addDoc,
@@ -13,8 +14,8 @@ import {
   doc,
   updateDoc,
   deleteDoc,
+  getDoc
 } from 'firebase/firestore';
-
 
 jest.mock('../src/lib/firebase', () => ({
   db: {}, 
@@ -36,6 +37,7 @@ jest.mock('firebase/firestore', () => ({
   doc: jest.fn(),
   updateDoc: jest.fn(),
   deleteDoc: jest.fn(),
+  getDoc: jest.fn(),
 }));
 
 // Karena error juga menyebutkan 'firebase/auth', meskipun tidak digunakan langsung di folderService.js,
@@ -63,7 +65,7 @@ describe('Folder Service', () => {
           userId: 'user123',
           name: 'My Folder 2'
         })
-      }, ];
+      }];
       getDocs.mockResolvedValueOnce({
         docs: mockDocs
       });
@@ -79,7 +81,7 @@ describe('Folder Service', () => {
         id: 'folder2',
         userId: 'user123',
         name: 'My Folder 2'
-      }, ]);
+      }]);
     });
 
     it('should return an empty array if no folders are found', async () => {
@@ -129,6 +131,38 @@ describe('Folder Service', () => {
 
       await deleteFolder('folderToDelete');
       expect(deleteDoc).toHaveBeenCalledWith(doc());
+    });
+  });
+
+  describe('getFolderById', () => {
+    it('should return folder data for a given folder ID', async () => {
+      const mockSnap = {
+        id: 'folder1',
+        data: () => ({
+          userId: 'user123',
+          name: 'My Folder 1'
+        }),
+        exists: () => true
+      };
+      getDoc.mockResolvedValueOnce(mockSnap);
+
+      const result = await getFolderById('folder1');
+      expect(getDoc).toHaveBeenCalledWith(doc(), 'folder1');
+      expect(result).toEqual({
+        id: 'folder1',
+        userId: 'user123',
+        name: 'My Folder 1'
+      });
+    });
+
+    it('should return null if folder is not found', async () => {
+      getDoc.mockResolvedValueOnce({
+        exists: () => false
+      });
+
+      const result = await getFolderById('nonExistentFolder');
+      expect(getDoc).toHaveBeenCalledWith(doc(), 'nonExistentFolder');
+      expect(result).toBeNull();
     });
   });
 });
