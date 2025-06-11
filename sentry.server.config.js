@@ -1,11 +1,15 @@
-import * as Sentry from '@sentry/node';
+// This file configures the initialization of Sentry on the server.
+// The config you add here will be used whenever the server handles a request.
+// https://docs.sentry.io/platforms/javascript/guides/nextjs/
 
-if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging') {
-  Sentry.init({
-    dsn: process.env.SENTRY_DSN,  
-    environment: process.env.NODE_ENV, 
-    release: process.env.GITHUB_SHA || 'manual-release',  
-  });
-}
+import * as Sentry from "@sentry/nextjs";
 
-export default Sentry;
+Sentry.init({
+  dsn: "https://2bd8971492912dbba4ee9f90d0fa59a1@o4509480564162560.ingest.de.sentry.io/4509480905211984",
+
+  // Define how likely traces are sampled. Adjust this value in production, or use tracesSampler for greater control.
+  tracesSampleRate: 1,
+
+  // Setting this option to true will print useful information to the console while you're setting up Sentry.
+  debug: false,
+});
