@@ -6,9 +6,28 @@ export default function AboutPage() {
 
   // Fungsi untuk memicu error
   const handleTriggerError = () => {
-    // Memicu error untuk mengirimkan exception ke Sentry
+  try {
     throw new Error("This is a test error from the AboutPage!");
-  };
+  } catch (error) {
+    Sentry.captureException(error, {
+      level: 'fatal', // Ini adalah level prioritas tertinggi di Sentry
+      tags: {
+        page: 'AboutPage',
+        type: 'test-error',
+        priority: 'high' // Tag kustom untuk filtering di dashboard
+      },
+      user: {
+        id: 'test-user-123',
+        email: 'test@example.com'
+      },
+      contexts: {
+        application: {
+          version: '1.0.0'
+        }
+      }
+    });
+  }
+};
 
   return (
     <div className="container mt-5">
