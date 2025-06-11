@@ -2638,7 +2638,7 @@
     rollup "4.35.0"
     stacktrace-parser "^0.1.10"
 
-"@sentry/node@9.28.1":
+"@sentry/node@9.28.1", "@sentry/node@^9.28.1":
   version "9.28.1"
   resolved "https://registry.yarnpkg.com/@sentry/node/-/node-9.28.1.tgz#21d65c8180b20e995f52ae3ebbe6534248ec5d36"
   integrity sha512-1bC8ywFPs1EIKzRlUhLoreTR/fUU45O+ezVNvOu0I6JURMwjyC8uT23f0Xkiolx4WjKZXER+d0el3HojPaYkYw==
@@ -2685,7 +2685,7 @@
   dependencies:
     "@sentry/core" "9.28.1"
 
-"@sentry/react@9.28.1":
+"@sentry/react@9.28.1", "@sentry/react@^9.28.1":
   version "9.28.1"
   resolved "https://registry.yarnpkg.com/@sentry/react/-/react-9.28.1.tgz#2c14af4f2bf606f0bc522e33b6f889852445082a"
   integrity sha512-XnEURhb2wG7FFCGMuW/IJc8YeDMb9LM7cZSBwBDcplR11mCRsLpf4AGm6K1nWmAn5ZvWrXRO/TBAf9DNRAfnfg==
