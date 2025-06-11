@@ -133,7 +133,7 @@ export default function Home() {
               style={{ cursor: "pointer" }}
             >
               <Link
-                href={`/list`}
+                href={`/folder?id=${folder.id}`}
                 className="flex-grow-1 text-decoration-none"
                 style={{ color: "#000" }}
               >
