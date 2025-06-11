@@ -3,7 +3,6 @@ import Home from '../src/pages/home';
 import * as folderService from '../src/lib/folderService';
 import * as noteService from '../src/lib/noteService';
 import Swal from 'sweetalert2';
-import { useRouter } from 'next/router';
 
 // Mock dependencies
 jest.mock('../src/lib/folderService');
@@ -14,7 +13,9 @@ describe('Home Component', () => {
   const mockUsername = 'testUser';
 
   beforeEach(() => {
-    // Setup mocks
+    // Mock the Swal.fire to simulate a user selecting a folder
+    Swal.fire.mockResolvedValueOnce({ isConfirmed: true, value: '1' });
+
     localStorage.setItem('username', mockUsername);
     folderService.getAllFolders.mockResolvedValue([
       { id: '1', name: 'Folder 1' },
@@ -72,6 +73,7 @@ describe('Home Component', () => {
     fireEvent.click(screen.getByText('Pilih'));
 
     expect(screen.getByText('Folder 1')).toBeInTheDocument();
+    expect(await screen.findByText('Note 1')).toBeInTheDocument();
   });
 
   it('should handle folder add', async () => {
@@ -152,5 +154,21 @@ describe('Home Component', () => {
     render(<Home />);
 
     expect(await screen.findByText('Belum ada catatan.')).toBeInTheDocument();
+  });
+
+  it('should handle folder selection and update selectedFolder state', async () => {
+    render(<Home />);
+
+    // Simulate folder selection
+    const selectFolderButton = screen.getByText('Pilih Folder');
+    fireEvent.click(selectFolderButton);
+
+    // Simulate folder selection with mock
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: '1' } });
+    fireEvent.click(screen.getByText('Pilih'));
+
+    // Verify selected folder state is updated
+    await waitFor(() => expect(screen.getByText('Folder 1')).toBeInTheDocument());
+    expect(await screen.queryByText('Menampilkan seluruh catatan')).not.toBeInTheDocument();
   });
 });
