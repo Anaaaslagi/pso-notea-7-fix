@@ -46,9 +46,9 @@ export default function LoginPage() {
         <p className="mt-3 text-center">
             Belum punya akun? <Link href="/register">Daftar</Link>
         </p>
-        <p className="mt-2 text-center">
+        {/* <p className="mt-2 text-center">
           <Link href="/forgotPassword">Lupa Password?</Link>
-        </p>
+        </p> */}
       </form>
     </div>
   );
