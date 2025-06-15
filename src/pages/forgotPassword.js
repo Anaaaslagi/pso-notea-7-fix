@@ -83,5 +83,3 @@ export default function ForgotPasswordPage() {
     </div>
   );
 }
-
-//test add  ulang
