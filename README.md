@@ -117,6 +117,32 @@ Tambahkan ke pipeline:
 ```yaml
 - run: yarn test
 ```
+### 9. Integrasi SonarQube untuk Analisis Kode
+
+Jalankan SonarQube lokal:
+   ```bash
+   docker run -d --name sonarqube -p 9000:9000 sonarqube:community
+   ```
+Buat project di dashboard SonarQube dan dapatkan `Project Key` dan `Token`
+Buat file `sonar-project.properties`:
+   ```properties
+   sonar.projectKey=notea
+   sonar.host.url=https://your-sonarqube-url.com
+   sonar.login=${SONAR_TOKEN}
+   sonar.sources=src
+   sonar.tests=__tests__
+   sonar.javascript.lcov.reportPaths=coverage/lcov.info
+   ```
+Tambahkan secret `SONAR_TOKEN` di GitHub Secrets
+Tambahkan job berikut ke `ci-pipeline.yml`:
+   ```yaml
+   - name: SonarQube Scan
+     run: |
+       npm install -g sonarqube-scanner
+       sonar-scanner
+     env:
+       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+   ```
 
 ### 4. Build Production App
 
@@ -207,8 +233,6 @@ with:
 
 ---
 
-
----
 
 ## 📄 Lisensi
 
