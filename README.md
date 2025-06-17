@@ -207,13 +207,6 @@ with:
 
 ---
 
-## 🖼️ Diagram CI/CD
-
-> Tambahkan file gambar pipeline (misal `assets/ci-cd-diagram.png`)
-
-```markdown
-<img src="./assets/ci-cd-diagram.png" alt="CI/CD Diagram" width="600"/>
-```
 
 ---
 
