@@ -38,7 +38,7 @@ Kami menerapkan pipeline Continuous Integration/Continuous Delivery (CI/CD) untu
 
 Pipeline ini membantu kami untuk merilis pembaruan lebih cepat, mengurangi risiko kesalahan manual, dan menjaga kualitas kode tetap tinggi.
 
-## 🚀 Get Started
+## 🚀 Get Started (For Users)
 
 Untuk menjalankan proyek ini secara lokal, ikuti langkah-langkah berikut:
 
@@ -68,6 +68,157 @@ Untuk menjalankan proyek ini secara lokal, ikuti langkah-langkah berikut:
     ```
     Aplikasi akan berjalan di `http://localhost:3000`.
 
-## ☁️ Deployment
+## 🚀 Get Started (For Developers)
+## 🔁 Langkah-Langkah Setup CI/CD Pipeline
 
-Aplikasi Notea di-deploy ke **Google Cloud Platform**. Proses deployment diotomatiskan melalui pipeline CI/CD kami, yang memanfaatkan Docker untuk kontainerisasi dan layanan GCP untuk hosting.
+### 1. Setup GitHub Actions
+
+- Buat folder `.github/workflows/`
+- Tambahkan file `ci-pipeline.yml` dan `cd-pipeline.yml`
+- Set branch utama ke `main`
+
+### 2. Linting dengan ESLint
+
+```bash
+yarn add eslint --dev
+yarn eslint --init
+```
+
+Tambahkan ke `package.json`:
+
+```json
+"scripts": {
+  "lint": "eslint ."
+}
+```
+
+Tambahkan ke GitHub Actions:
+
+```yaml
+- run: yarn lint
+```
+
+### 3. Unit Testing dengan Jest
+
+```bash
+yarn add jest --dev
+```
+
+Tambahkan script:
+
+```json
+"scripts": {
+  "test": "jest"
+}
+```
+
+Tambahkan ke pipeline:
+
+```yaml
+- run: yarn test
+```
+
+### 4. Build Production App
+
+Tambahkan ke `package.json`:
+
+```json
+"scripts": {
+  "build": "next build"
+}
+```
+
+Tambahkan ke GitHub Actions:
+
+```yaml
+- run: yarn build
+```
+
+### 5. Dockerize Aplikasi
+
+Buat `Dockerfile`:
+
+```Dockerfile
+FROM node:18-alpine
+WORKDIR /app
+COPY . .
+RUN yarn install --frozen-lockfile
+RUN yarn build
+CMD ["yarn", "start"]
+```
+
+Tambahkan ke pipeline:
+
+```yaml
+docker build -t gcr.io/<project>/notea .
+docker push gcr.io/<project>/notea
+```
+
+### 6. Setup Google Cloud Platform (GCP)
+
+1. Aktifkan Cloud Run & Artifact Registry
+2. Buat Service Account dengan role:
+   - Cloud Run Admin
+   - Artifact Registry Writer
+   - Viewer / Editor
+3. Buat registry:
+
+```bash
+gcloud artifacts repositories create docker-repo \
+  --repository-format=docker \
+  --location=asia-southeast2
+```
+
+4. Deploy awal ke Cloud Run:
+
+```bash
+gcloud run deploy notea \
+  --image=gcr.io/<project>/notea \
+  --platform=managed \
+  --region=asia-southeast2 \
+  --allow-unauthenticated
+```
+
+### 7. Tambahkan Secrets di GitHub
+
+Buka: `Settings > Secrets and Variables > Actions`
+
+| Secret Name       | Keterangan                        |
+|-------------------|------------------------------------|
+| `GCP_SA_KEY`      | Service account JSON               |
+| `GCP_PROJECT`     | ID proyek Google Cloud             |
+| `GCP_REGION`      | Lokasi (mis. `asia-southeast2`)    |
+| `GCP_SERVICE`     | Nama layanan Cloud Run             |
+| `SENTRY_DSN`      | (opsional) Sentry DSN              |
+| `SENTRY_ORG`      | (opsional) Nama organisasi Sentry  |
+| `SENTRY_PROJECT`  | (opsional) Nama project Sentry     |
+
+### 8. Deploy Otomatis ke Cloud Run
+
+CI Pipeline selesai → CD Pipeline jalan otomatis jika sukses:
+
+```yaml
+uses: google-github-actions/deploy-cloudrun@v2
+with:
+  service: ${{ secrets.GCP_SERVICE }}
+  region: ${{ secrets.GCP_REGION }}
+  image: ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/docker-repo/notea:${{ github.sha }}
+```
+
+---
+
+## 🖼️ Diagram CI/CD
+
+> Tambahkan file gambar pipeline (misal `assets/ci-cd-diagram.png`)
+
+```markdown
+<img src="./assets/ci-cd-diagram.png" alt="CI/CD Diagram" width="600"/>
+```
+
+---
+
+## 📄 Lisensi
+
+MIT License  
+© 2025 [Anaaaslagi](https://github.com/Anaaaslagi)
+
