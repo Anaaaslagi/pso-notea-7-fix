@@ -23,7 +23,7 @@ Web app ini dikembangkan dengan beberapa tools untuk mendukung pengembangannya:
 * **Deployment:** [Google Cloud Platform (GCP)](https://cloud.google.com/) - Aplikasi Notea di-deploy dan di-host menggunakan layanan dari Google Cloud, seperti Cloud Run, App Engine, atau Kubernetes Engine.
 
 ## 🔄 Pipeline CI/CD
-![Workflow Design PSO (1)](https://github.com/user-attachments/assets/3a436b08-19fb-414c-96bc-a5b84029aa21)
+![Workflow Design PSO (1)](https://github.com/user-attachments/assets/373faf06-77bb-4bee-9c60-738926e76f9c)
 
 Kami menerapkan pipeline Continuous Integration/Continuous Delivery (CI/CD) untuk mengotomatiskan proses build, pengujian, dan deployment aplikasi Notea. Alur kerja CI/CD kami umumnya melibatkan langkah-langkah berikut:
 
@@ -69,7 +69,6 @@ Untuk menjalankan proyek ini secara lokal, ikuti langkah-langkah berikut:
     Aplikasi akan berjalan di `http://localhost:3000`.
 
 ## 🚀 Get Started (For Developers)
-## 🔁 Langkah-Langkah Setup CI/CD Pipeline
 
 ### 1. Setup GitHub Actions
 
@@ -117,7 +116,7 @@ Tambahkan ke pipeline:
 ```yaml
 - run: yarn test
 ```
-### 9. Integrasi SonarQube untuk Analisis Kode
+### 4. Integrasi SonarQube untuk Analisis Kode
 
 Jalankan SonarQube lokal:
    ```bash
@@ -144,7 +143,7 @@ Tambahkan job berikut ke `ci-pipeline.yml`:
        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
    ```
 
-### 4. Build Production App
+### 5. Build Production App
 
 Tambahkan ke `package.json`:
 
@@ -160,7 +159,7 @@ Tambahkan ke GitHub Actions:
 - run: yarn build
 ```
 
-### 5. Dockerize Aplikasi
+### 6. Dockerize Aplikasi
 
 Buat `Dockerfile`:
 
@@ -180,7 +179,7 @@ docker build -t gcr.io/<project>/notea .
 docker push gcr.io/<project>/notea
 ```
 
-### 6. Setup Google Cloud Platform (GCP)
+### 7. Setup Google Cloud Platform (GCP)
 
 1. Aktifkan Cloud Run & Artifact Registry
 2. Buat Service Account dengan role:
@@ -205,7 +204,7 @@ gcloud run deploy notea \
   --allow-unauthenticated
 ```
 
-### 7. Tambahkan Secrets di GitHub
+### 8. Tambahkan Secrets di GitHub
 
 Buka: `Settings > Secrets and Variables > Actions`
 
@@ -219,7 +218,7 @@ Buka: `Settings > Secrets and Variables > Actions`
 | `SENTRY_ORG`      | (opsional) Nama organisasi Sentry  |
 | `SENTRY_PROJECT`  | (opsional) Nama project Sentry     |
 
-### 8. Deploy Otomatis ke Cloud Run
+### 9. Deploy Otomatis ke Cloud Run
 
 CI Pipeline selesai → CD Pipeline jalan otomatis jika sukses:
 
