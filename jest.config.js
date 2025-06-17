@@ -38,7 +38,8 @@ export default {
     '<rootDir>/src/pages/_document.js',
     '<rootDir>/src/pages/api/',
     '<rootDir>/src/pages/about.js',
-    '<rootDir>/src/pages/new.js'
+    '<rootDir>/src/pages/new.js',
+    'sentry-example-page.js'
   ],
   collectCoverageFrom: [
     'src/pages/**/*.{js,jsx,ts,tsx}',
@@ -48,7 +49,8 @@ export default {
     '!src/pages/about.js',
     '!src/pages/new.js',
     '!**/*.config.js',
-    '!**/*.setup.js'
+    '!**/*.setup.js',
+    '!src/pages/sentry-example-page.js'
   ],
   transform: {
     '^.+\\.(js|jsx|ts|tsx)$': ['babel-jest', { presets: ['next/babel'] }]
