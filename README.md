@@ -1,4 +1,5 @@
 # Notea - Aplikasi Pencatat Modern
+![image](https://github.com/user-attachments/assets/3ba51ac5-9f6b-4fae-846a-5b1e79b417f6)
 
 Notea adalah aplikasi pembuat catatan sederhana yang menerapkan konsep CRUD (Create,Read,Update, dan Delete).
 ## ✨ Fitur Utama 
@@ -22,6 +23,7 @@ Web app ini dikembangkan dengan beberapa tools untuk mendukung pengembangannya:
 * **Deployment:** [Google Cloud Platform (GCP)](https://cloud.google.com/) - Aplikasi Notea di-deploy dan di-host menggunakan layanan dari Google Cloud, seperti Cloud Run, App Engine, atau Kubernetes Engine.
 
 ## 🔄 Pipeline CI/CD
+![Workflow Design PSO (1)](https://github.com/user-attachments/assets/3a436b08-19fb-414c-96bc-a5b84029aa21)
 
 Kami menerapkan pipeline Continuous Integration/Continuous Delivery (CI/CD) untuk mengotomatiskan proses build, pengujian, dan deployment aplikasi Notea. Alur kerja CI/CD kami umumnya melibatkan langkah-langkah berikut:
 
