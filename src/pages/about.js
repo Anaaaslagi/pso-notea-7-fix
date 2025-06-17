@@ -4,7 +4,7 @@ import * as Sentry from '@sentry/nextjs'; // Import Sentry untuk memicu error
 
 export default function AboutPage() {
 
-  // Fungsi untuk memicu error
+  // Fungsi untuk memicu errorr
   const handleTriggerError = () => {
   try {
     throw new Error("This is a test error from the AboutPage!");
