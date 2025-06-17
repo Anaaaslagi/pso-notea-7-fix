@@ -217,6 +217,8 @@ Buka: `Settings > Secrets and Variables > Actions`
 | `SENTRY_DSN`      | (opsional) Sentry DSN              |
 | `SENTRY_ORG`      | (opsional) Nama organisasi Sentry  |
 | `SENTRY_PROJECT`  | (opsional) Nama project Sentry     |
+| `SONAR_HOST_URL`  | Alamat server sonarqube            |
+| `SONAR_TOKEN`     | Kode autentikasi sonarqube         |
 
 ### 9. Deploy Otomatis ke Cloud Run
 

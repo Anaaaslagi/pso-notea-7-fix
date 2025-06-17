@@ -3,7 +3,6 @@ import Link from 'next/link';
 import * as Sentry from '@sentry/nextjs'; // Import Sentry untuk memicu error
 
 export default function AboutPage() {
-
   return (
     <div className="container mt-5">
       <nav className="mb-4 d-flex flex-wrap gap-2">
